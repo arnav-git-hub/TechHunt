@@ -1,0 +1,7 @@
+# Local dependencies and generated output must never enter the image build context.
+node_modules
+node_modules.*
+.next
+coverage
+*.tsbuildinfo
+npm-debug.log*

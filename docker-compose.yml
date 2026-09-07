@@ -1,0 +1,83 @@
+# TechHunt — Docker Compose (development + CI)
+# Services: frontend (Next.js), backend (FastAPI), db (PostgreSQL)
+#
+# Usage:
+#   docker compose up --build          # start all services
+#   docker compose up --build backend  # start only backend + db
+#   docker compose down -v             # stop and remove volumes
+
+services:
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-techhunt}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techhunt_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-techhunt}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-techhunt} -d ${POSTGRES_DB:-techhunt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── FastAPI Backend ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: runtime
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-techhunt}:${POSTGRES_PASSWORD:-techhunt_dev}@db:5432/${POSTGRES_DB:-techhunt}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-false}
+      # AI keys — never exposed to frontend
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # OAuth — future
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      # Connector keys — only active when credentials confirmed
+      LUMA_API_KEY: ${LUMA_API_KEY:-}
+      MEETUP_API_KEY: ${MEETUP_API_KEY:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Next.js Frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runner
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Only NEXT_PUBLIC_* variables are sent to the browser — keep secrets out
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      NODE_ENV: production
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
