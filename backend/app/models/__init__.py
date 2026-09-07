@@ -11,7 +11,7 @@ from app.models.event import (  # noqa: F401
     EventTechnology,
     SavedEvent,
 )
-from app.models.auth import Notification, Recommendation  # noqa: F401
+from app.models.auth import EventReminder, Notification, Recommendation  # noqa: F401
 from app.models.admin import (  # noqa: F401
     OrganizerSubmission,
     EventSource,

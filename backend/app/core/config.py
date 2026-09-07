@@ -64,6 +64,14 @@ class Settings(BaseSettings):
     github_client_secret: str = ""
 
     # ------------------------------------------------------------------
+    # Stage 6 optional integrations
+    # ------------------------------------------------------------------
+    smtp_host: str = ""
+    smtp_from_email: str = ""
+    sentry_dsn: str = ""
+    posthog_api_key: str = ""
+
+    # ------------------------------------------------------------------
     # Connector keys (future — never activate without permission check)
     # ------------------------------------------------------------------
     luma_api_key: str = ""

@@ -273,6 +273,11 @@ export default async function EventPage({ params }: EventPageProps) {
                     <p className="text-gray-700">{event.location}</p>
                   </div>
                 )}
+                {event.map_url && (
+                  <a href={event.map_url} target="_blank" rel="noopener noreferrer" className="block text-blue-600 hover:text-blue-700">
+                    View on map
+                  </a>
+                )}
                 <div>
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-0.5">
                     Source
