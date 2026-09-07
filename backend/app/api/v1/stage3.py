@@ -43,7 +43,7 @@ from app.services.natural_search_service import interpret_natural_query
 from app.services.recommendation_service import RecommendationService
 from app.utils.slug import make_unique_slug
 
-router = APIRouter(tags=["phase-3"])
+router = APIRouter(tags=["phase-3", "phase-4"])
 
 
 def _parse_submission_datetime(value: object) -> datetime | None:

@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.admin import EventSource, IngestionRun
 from app.models.event import Event, EventSkill, EventTag, EventTechnology
+from app.services.connector_registry import CONNECTORS, SOURCE_LABELS
+from app.services.deduplication_service import DeduplicationService
 from app.utils.slug import make_unique_slug
 from connectors.base import EventConnector, NormalizedEvent, SourceStatusCode
-from connectors.mock import MockConnector
-
-_CONNECTORS: dict[str, type[EventConnector]] = {"mock": MockConnector}
-_SOURCE_LABELS = {"mock": "TechHunt demo data"}
 
 
 class IngestionService:
@@ -27,7 +25,7 @@ class IngestionService:
 
     async def list_sources(self) -> list[EventSource]:
         """Ensure the source catalogue exists, then return its current status."""
-        for key, connector_type in _CONNECTORS.items():
+        for key, connector_type in CONNECTORS.items():
             result = await self.db.execute(
                 select(EventSource).where(EventSource.connector_key == key)
             )
@@ -36,23 +34,33 @@ class IngestionService:
                 self.db.add(
                     EventSource(
                         connector_key=key,
-                        label=_SOURCE_LABELS[key],
+                        label=SOURCE_LABELS[key],
                         status=connector.get_source_status().status.value,
                     )
                 )
         await self.db.flush()
-        result = await self.db.execute(select(EventSource).order_by(EventSource.connector_key))
+        result = await self.db.execute(
+            select(EventSource).order_by(
+                case((EventSource.connector_key == "mock", 0), else_=1),
+                EventSource.connector_key,
+            )
+        )
         return list(result.scalars())
 
     async def ingest(self, source_key: str) -> IngestionRun:
         """Ingest a permitted source and record the result for auditing."""
-        connector_type = _CONNECTORS.get(source_key)
+        connector_type = CONNECTORS.get(source_key)
         if connector_type is None:
-            raise ValueError("This source is not enabled for ingestion.")
+            raise ValueError("This source is not registered.")
 
         sources = await self.list_sources()
         source = next(item for item in sources if item.connector_key == source_key)
         connector = connector_type()
+        if connector.get_source_status().status != SourceStatusCode.ACTIVE:
+            raise ValueError(
+                "This source is not configured for ingestion. Official credentials and "
+                "source permission are required before activation."
+            )
         run = IngestionRun(source_id=source.id)
         self.db.add(run)
         await self.db.flush()
@@ -130,5 +138,7 @@ class IngestionService:
         event.tags = [EventTag(tag=tag) for tag in normalized.tags]
         event.skills = [EventSkill(skill=skill) for skill in normalized.skills]
         event.technologies = [EventTechnology(technology=tech) for tech in normalized.technologies]
+        await self.db.flush()
+        await DeduplicationService(self.db).link_to_canonical_event(event)
         await self.db.flush()
         return created

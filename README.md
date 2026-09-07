@@ -272,7 +272,7 @@ All source connectors implement the abstract `EventConnector` interface in [`con
 | 2 | ✅ Complete | DB schema, events API, auth (register/login/JWT) |
 | 3 | ✅ Complete | Mock ingestion, organizer submissions, saved events, admin source controls |
 | 4 | ✅ Complete | Provider-neutral AI enrichment interface, profile-based suggestions, natural-language event search |
-| 5 | Pending | Live connectors, deduplication |
+| 5 | In progress | Deduplication and calendar export complete; live connectors await official credentials and permission |
 | 6 | Pending | Email, OAuth, maps, Sentry, PostHog |
 
 ---
