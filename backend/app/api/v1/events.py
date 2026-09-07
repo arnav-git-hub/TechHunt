@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.schemas.event import EventDetail, EventFilters, EventSummary, PaginatedEvents
 from app.services.event_service import EventService, compute_pages
+from app.services.map_service import build_map_url
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -147,6 +148,7 @@ def _event_to_detail(event) -> EventDetail:  # type: ignore[no-untyped-def]
         price_type=event.price_type,
         event_status=event.event_status,
         ai_summary=event.ai_summary,
+        map_url=build_map_url(event),
         tags=[t.tag for t in event.tags],
         skills=[s.skill for s in event.skills],
         technologies=[t.technology for t in event.technologies],

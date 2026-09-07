@@ -273,7 +273,7 @@ All source connectors implement the abstract `EventConnector` interface in [`con
 | 3 | ✅ Complete | Mock ingestion, organizer submissions, saved events, admin source controls |
 | 4 | ✅ Complete | Provider-neutral AI enrichment interface, profile-based suggestions, natural-language event search |
 | 5 | In progress | Deduplication and calendar export complete; live connectors await official credentials and permission |
-| 6 | Pending | Email, OAuth, maps, Sentry, PostHog |
+| 6 | In progress | In-app reminders and map links complete; email, OAuth, Sentry, and PostHog await credentials |
 
 ---
 

@@ -214,7 +214,7 @@ Base path: `/api/v1`
 | 3 | Mock connector ingestion, organizer submission flow, admin moderation, saved events, notifications | **Complete** |
 | 4 | Provider-neutral AI enrichment interface, profile-based suggestions, NL event query | **Complete** |
 | 5 | Deduplication and calendar export complete; live integrations await confirmed credentials and source permission | **In progress** |
-| 6 | Email reminders, OAuth (Google/GitHub), map view, Sentry, PostHog | Pending |
+| 6 | In-app reminders and map links complete; email, OAuth, Sentry, and PostHog await credentials | **In progress** |
 
 ---
 

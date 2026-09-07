@@ -6,7 +6,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, events, health, stage3, stage5, users
+from app.api.v1 import auth, events, health, stage3, stage5, stage6, users
 from app.core.config import settings
 
 
@@ -50,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(users.router, prefix="/api/v1")
     app.include_router(stage3.router, prefix="/api/v1")
     app.include_router(stage5.router, prefix="/api/v1")
+    app.include_router(stage6.router, prefix="/api/v1")
 
     return app
 

@@ -68,6 +68,7 @@ class EventDetail(EventSummary):
     longitude: Optional[float] = None
     eligibility: Optional[str] = None
     ai_summary: Optional[str] = None
+    map_url: Optional[str] = None
     skills: List[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime

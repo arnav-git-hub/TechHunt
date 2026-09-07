@@ -85,6 +85,7 @@ export interface Event {
   price_type: PriceType;
   event_status: EventStatus;
   ai_summary: string | null;
+  map_url: string | null;
   tags: string[];
   skills: string[];
   technologies: string[];
