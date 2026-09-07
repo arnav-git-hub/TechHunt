@@ -51,6 +51,7 @@ class EventService:
             )
             .where(Event.slug == slug)
             .where(Event.event_status == "published")
+            .where(Event.canonical_event_id.is_(None))
         )
         result = await self._db.execute(query)
         return result.scalar_one_or_none()
@@ -73,6 +74,7 @@ class EventService:
             )
             .where(Event.id == uid)
             .where(Event.event_status == "published")
+            .where(Event.canonical_event_id.is_(None))
         )
         result = await self._db.execute(query)
         return result.scalar_one_or_none()
@@ -91,6 +93,7 @@ class EventService:
                 selectinload(Event.technologies),
             )
             .where(Event.event_status == "published")
+            .where(Event.canonical_event_id.is_(None))
             .order_by(Event.start_at_utc.asc().nulls_last(), Event.published_at.desc())
         )
 
