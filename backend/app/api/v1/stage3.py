@@ -37,6 +37,7 @@ from app.schemas.stage4 import (
     UserPreferencesResponse,
     UserPreferencesUpdate,
 )
+from app.services.analytics_service import analytics
 from app.services.event_service import EventService, compute_pages
 from app.services.ingestion_service import IngestionService
 from app.services.natural_search_service import interpret_natural_query
@@ -216,6 +217,11 @@ async def save_event(
     existing = await db.get(SavedEvent, {"user_id": current_user.id, "event_id": event_id})
     if existing is None:
         db.add(SavedEvent(user_id=current_user.id, event_id=event_id))
+        analytics.capture(
+            distinct_id=str(current_user.id),
+            event="event_saved",
+            properties={"event_id": str(event_id)},
+        )
 
 
 @router.delete("/events/{event_id}/save", status_code=status.HTTP_204_NO_CONTENT)

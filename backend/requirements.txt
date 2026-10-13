@@ -23,7 +23,7 @@ pydantic-settings>=2.3.0
 email-validator>=2.2.0
 
 # -------------------------------------------------------------------
-# Security (future auth — scaffolded now)
+# Security
 # -------------------------------------------------------------------
 passlib[bcrypt]>=1.7.4
 python-jose[cryptography]>=3.3.0
@@ -34,8 +34,17 @@ python-jose[cryptography]>=3.3.0
 httpx>=0.27.0
 
 # -------------------------------------------------------------------
+# Stage 6 integrations
+# -------------------------------------------------------------------
+aiosmtplib>=3.0.0          # async SMTP for email reminders
+sentry-sdk[fastapi]>=2.8.0 # error tracking — activated only when SENTRY_DSN is set
+posthog>=3.5.0              # analytics — activated only when POSTHOG_API_KEY is set
+authlib>=1.3.0              # OAuth (Google, GitHub) — activated only when client credentials set
+
+# -------------------------------------------------------------------
 # Testing
 # -------------------------------------------------------------------
 pytest>=8.2.0
 pytest-asyncio>=0.23.0
 anyio>=4.4.0
+aiosqlite>=0.20.0          # in-memory SQLite for tests

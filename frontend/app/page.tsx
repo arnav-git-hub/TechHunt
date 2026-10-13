@@ -31,40 +31,35 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Coming soon / teaser section */}
+        {/* Call to action */}
         <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-1.5 text-sm font-medium text-blue-700 mb-6">
-              <span className="h-2 w-2 rounded-full bg-blue-500"></span>
-              Now in development
+            <div className="inline-flex items-center gap-2 rounded-full bg-green-50 px-4 py-1.5 text-sm font-medium text-green-700 mb-6">
+              <span className="h-2 w-2 rounded-full bg-green-500"></span>
+              Live — browse opportunities now
             </div>
             <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl mb-4">
-              Opportunities are coming soon
+              Your next opportunity is waiting
             </h2>
             <p className="text-lg text-gray-500 mb-8 text-balance">
-              We&apos;re building integrations with trusted sources — hackathon
-              platforms, developer meetup networks, open-source programs, and
-              more. Sign up to be notified when we launch.
+              Browse hackathons, workshops, fellowships, and more. Save events,
+              get personalised recommendations, and export to your calendar —
+              all in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                type="button"
-                disabled
-                className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white opacity-60 cursor-not-allowed"
+              <a
+                href="/events"
+                className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
               >
-                Notify me at launch
-              </button>
-              <button
-                type="button"
-                disabled
-                className="rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 opacity-60 cursor-not-allowed"
+                Browse opportunities
+              </a>
+              <a
+                href="/auth/register"
+                className="rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                Submit an opportunity
-              </button>
+                Create an account
+              </a>
             </div>
-            <p className="mt-4 text-xs text-gray-400">
-              Coming in Stage 2 — authentication, events API, and more.
-            </p>
           </div>
         </section>
 

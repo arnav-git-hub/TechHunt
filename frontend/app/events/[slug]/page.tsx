@@ -7,7 +7,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ReminderButton } from "@/components/ReminderButton";
 import { fetchEvent } from "@/lib/api";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
 
 interface EventPageProps {
   params: { slug: string };
@@ -236,6 +240,39 @@ export default async function EventPage({ params }: EventPageProps) {
                       d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6m4-3h6m0 0v6m0-6L10 14"
                     />
                   </svg>
+                </a>
+              )}
+
+              {/* Remind me */}
+              {event.start_at_utc && (
+                <ReminderButton
+                  eventId={event.id}
+                  startAtUtc={event.start_at_utc}
+                />
+              )}
+
+              {/* Add to calendar */}
+              {event.start_at_utc && (
+                <a
+                  href={`${API_BASE_URL}/api/v1/events/${event.id}/calendar.ics`}
+                  download={`${event.slug}.ics`}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  <svg
+                    className="h-4 w-4 text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Add to calendar
                 </a>
               )}
 

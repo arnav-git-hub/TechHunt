@@ -17,6 +17,7 @@ from app.models.auth import EventReminder
 from app.models.event import Event
 from app.models.user import User
 from app.schemas.stage6 import IntegrationStatusResponse, ReminderCreateRequest, ReminderResponse
+from app.services.analytics_service import analytics
 from app.services.reminder_service import ReminderService
 
 router = APIRouter(tags=["phase-6"])
@@ -53,6 +54,11 @@ async def create_reminder(event_id: uuid.UUID, payload: ReminderCreateRequest, c
     reminder.is_email_requested = payload.request_email
     if existing is None:
         db.add(reminder)
+        analytics.capture(
+            distinct_id=str(current_user.id),
+            event="reminder_created",
+            properties={"event_id": str(event_id), "lead_hours": payload.lead_hours},
+        )
     await db.flush()
     return ReminderResponse.model_validate(reminder)
 

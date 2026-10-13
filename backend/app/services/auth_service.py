@@ -9,6 +9,7 @@ from app.auth.jwt import create_access_token
 from app.auth.password import hash_password, verify_password
 from app.models.user import User
 from app.schemas.user import UserLoginRequest, UserRegisterRequest
+from app.services.analytics_service import analytics
 
 
 class AuthService:
@@ -39,6 +40,7 @@ class AuthService:
         self._db.add(user)
         await self._db.flush()  # populate user.id
 
+        analytics.capture(distinct_id=str(user.id), event="user_registered")
         token = create_access_token(str(user.id))
         return user, token
 

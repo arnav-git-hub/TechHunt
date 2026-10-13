@@ -88,3 +88,6 @@ class EventReminder(UUIDPrimaryKeyMixin, Base):
     sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     is_email_requested: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow, server_default="now()")
+
+    user: Mapped["User"] = relationship("User")
+    event: Mapped["Event"] = relationship("Event")
