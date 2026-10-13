@@ -59,6 +59,8 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
       # Connector keys — only active when credentials confirmed
+      KAGGLE_USERNAME: ${KAGGLE_USERNAME:-}
+      KAGGLE_API_KEY: ${KAGGLE_API_KEY:-}
       LUMA_API_KEY: ${LUMA_API_KEY:-}
       MEETUP_API_KEY: ${MEETUP_API_KEY:-}
     depends_on:

@@ -76,8 +76,10 @@ class Settings(BaseSettings):
     posthog_api_key: str = ""
 
     # ------------------------------------------------------------------
-    # Connector keys (future — never activate without permission check)
+    # Connector keys (never activate without permission check)
     # ------------------------------------------------------------------
+    kaggle_username: str = ""
+    kaggle_api_key: str = ""
     luma_api_key: str = ""
     meetup_api_key: str = ""
 

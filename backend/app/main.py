@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
@@ -13,6 +14,13 @@ from app.api.v1 import auth, events, health, oauth, stage3, stage5, stage6, user
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+# How often each scheduled task runs
+_INGESTION_INTERVAL_SECONDS: int = 4 * 60 * 60   # every 4 hours
+_REMINDER_INTERVAL_SECONDS: int = 15 * 60          # every 15 minutes
+
+# Sources that run automatically (no credentials, always ACTIVE)
+_AUTO_INGEST_SOURCES: list[str] = ["mock", "devfolio", "mlh"]
 
 
 def _init_sentry() -> None:
@@ -40,11 +48,62 @@ def _init_sentry() -> None:
         logger.error("Sentry initialisation failed — %s", exc)
 
 
+async def _ingestion_loop() -> None:
+    """Background task: re-ingest all auto-sources every 4 hours.
+
+    Also ingests Kaggle if credentials are configured.
+    Errors in one source never block the others.
+    """
+    from app.database.session import get_db
+    from app.services.ingestion_service import IngestionService
+
+    while True:
+        await asyncio.sleep(_INGESTION_INTERVAL_SECONDS)
+        sources = list(_AUTO_INGEST_SOURCES)
+        if settings.kaggle_username and settings.kaggle_api_key:
+            sources.append("kaggle")
+        for source_key in sources:
+            try:
+                async for db in get_db():
+                    run = await IngestionService(db).ingest(source_key)
+                    logger.info(
+                        "Scheduler: ingested %s — created=%d updated=%d errors=%s",
+                        source_key,
+                        run.events_created,
+                        run.events_updated,
+                        run.errors,
+                    )
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Scheduler: ingestion failed for %s — %s", source_key, exc)
+
+
+async def _reminder_loop() -> None:
+    """Background task: dispatch due reminders every 15 minutes."""
+    from app.database.session import get_db
+    from app.services.reminder_service import ReminderService
+
+    while True:
+        await asyncio.sleep(_REMINDER_INTERVAL_SECONDS)
+        try:
+            async for db in get_db():
+                dispatched = await ReminderService(db).dispatch_due()
+                if dispatched:
+                    logger.info("Scheduler: dispatched %d reminder(s)", dispatched)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Scheduler: reminder dispatch failed — %s", exc)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: startup and shutdown hooks."""
     _init_sentry()
+    ingestion_task = asyncio.create_task(_ingestion_loop())
+    reminder_task = asyncio.create_task(_reminder_loop())
+    logger.info("Background scheduler started (ingestion every 4h, reminders every 15min)")
     yield
+    ingestion_task.cancel()
+    reminder_task.cancel()
+    logger.info("Background scheduler stopped")
 
 
 def create_app() -> FastAPI:
