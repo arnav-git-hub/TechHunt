@@ -43,11 +43,21 @@ services:
       DEBUG: ${DEBUG:-false}
       # AI keys — never exposed to frontend
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      # OAuth — future
+      # OAuth (Stage 6 — gracefully disabled when empty)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      # Stage 6 email (gracefully disabled when SMTP_HOST is empty)
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+      # Stage 6 monitoring (gracefully disabled when keys are empty)
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
       # Connector keys — only active when credentials confirmed
       LUMA_API_KEY: ${LUMA_API_KEY:-}
       MEETUP_API_KEY: ${MEETUP_API_KEY:-}
