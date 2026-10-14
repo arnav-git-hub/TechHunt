@@ -60,7 +60,7 @@ async def _ingestion_loop() -> None:
     while True:
         await asyncio.sleep(_INGESTION_INTERVAL_SECONDS)
         sources = list(_AUTO_INGEST_SOURCES)
-        if settings.kaggle_username and settings.kaggle_api_key:
+        if settings.kaggle_api_token or (settings.kaggle_username and settings.kaggle_api_key):
             sources.append("kaggle")
         for source_key in sources:
             try:

@@ -78,8 +78,10 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     # Connector keys (never activate without permission check)
     # ------------------------------------------------------------------
-    kaggle_username: str = ""
-    kaggle_api_key: str = ""
+    # Kaggle — new-style bearer token (KGAT_...) takes priority over classic key
+    kaggle_api_token: str = ""   # new-style: KGAT_...
+    kaggle_username: str = ""    # classic only — not needed if kaggle_api_token is set
+    kaggle_api_key: str = ""     # classic only — not needed if kaggle_api_token is set
     luma_api_key: str = ""
     meetup_api_key: str = ""
 

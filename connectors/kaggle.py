@@ -1,7 +1,15 @@
 """Kaggle connector — fetches public ML competitions via the Kaggle REST API.
 
-Authentication: HTTP Basic Auth using KAGGLE_USERNAME + KAGGLE_API_KEY.
-Get your key at: https://www.kaggle.com/settings → API → Create New Token.
+Authentication supports two formats:
+  1. New-style bearer token (KGAT_...):
+       Set KAGGLE_API_TOKEN=KGAT_3b1... in .env
+       Get it at https://www.kaggle.com/settings → API → Create New API Token
+  2. Classic username + key (legacy):
+       Set KAGGLE_USERNAME=yourname and KAGGLE_API_KEY=abc123... in .env
+       Download kaggle.json from the same settings page (old-style)
+
+The connector checks for KAGGLE_API_TOKEN first, then falls back to
+KAGGLE_USERNAME + KAGGLE_API_KEY.
 
 API reference: https://www.kaggle.com/docs/api
 Endpoint used: GET https://www.kaggle.com/api/v1/competitions/list
@@ -41,14 +49,21 @@ _API_BASE = "https://www.kaggle.com/api/v1"
 _COMPETITIONS_ENDPOINT = f"{_API_BASE}/competitions/list"
 
 
-def _get_credentials() -> tuple[str, str] | None:
-    """Return (username, api_key) from settings, or None if unconfigured."""
+def _get_auth() -> dict | None:
+    """Return httpx auth headers/params, or None if unconfigured.
+
+    Checks for the new-style KAGGLE_API_TOKEN (KGAT_...) first, then
+    falls back to classic KAGGLE_USERNAME + KAGGLE_API_KEY Basic Auth.
+    Returns a dict of extra kwargs to pass to httpx.AsyncClient.get().
+    """
     try:
         from app.core.config import settings
-        username = settings.kaggle_username
-        api_key = settings.kaggle_api_key
-        if username and api_key:
-            return username, api_key
+        # New-style bearer token (KGAT_...)
+        if settings.kaggle_api_token:
+            return {"headers": {"Authorization": f"Bearer {settings.kaggle_api_token}"}}
+        # Classic username + key
+        if settings.kaggle_username and settings.kaggle_api_key:
+            return {"auth": (settings.kaggle_username, settings.kaggle_api_key)}
     except Exception:  # noqa: BLE001
         pass
     return None
@@ -70,7 +85,7 @@ class KaggleConnector(EventConnector):
 
     Fetches active and upcoming public competitions and maps them to the
     TechHunt canonical event model.  Stays in UNCONFIGURED state when
-    KAGGLE_USERNAME / KAGGLE_API_KEY are absent from settings.
+    no Kaggle credentials are configured in settings.
     """
 
     source_key: str = "kaggle"
@@ -85,19 +100,22 @@ class KaggleConnector(EventConnector):
         **kwargs: Any,  # noqa: ARG002
     ) -> List[RawEvent]:
         """Fetch a page of Kaggle competitions."""
-        creds = _get_credentials()
-        if creds is None:
+        auth_kwargs = _get_auth()
+        if auth_kwargs is None:
             raise ValueError(
-                "KaggleConnector requires KAGGLE_USERNAME and KAGGLE_API_KEY. "
+                "KaggleConnector requires KAGGLE_API_TOKEN (new-style) or "
+                "KAGGLE_USERNAME + KAGGLE_API_KEY (classic). "
                 "Get yours at https://www.kaggle.com/settings → API."
             )
-        username, api_key = creds
         page = (offset // limit) + 1  # Kaggle uses 1-based page numbers
         params = {
             "page": page,
             "pageSize": min(limit, 100),
             "sortBy": "latestDeadline",
         }
+        # Merge Accept header with any auth headers from _get_auth()
+        extra_headers = {"Accept": "application/json"}
+        extra_headers.update(auth_kwargs.pop("headers", {}))
         last_exc: Exception | None = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
@@ -105,8 +123,8 @@ class KaggleConnector(EventConnector):
                     response = await client.get(
                         _COMPETITIONS_ENDPOINT,
                         params=params,
-                        auth=(username, api_key),
-                        headers={"Accept": "application/json"},
+                        headers=extra_headers,
+                        **auth_kwargs,
                     )
                 if response.status_code == 429:
                     logger.warning("KaggleConnector: rate-limited (attempt %d/%d)", attempt, MAX_RETRIES)
@@ -184,14 +202,13 @@ class KaggleConnector(EventConnector):
         return ValidationResult(is_valid=len(errors) == 0, errors=errors)
 
     def get_source_status(self) -> SourceStatus:
-        creds = _get_credentials()
-        if creds is None:
+        if _get_auth() is None:
             return SourceStatus(
                 source_key=self.source_key,
                 status=SourceStatusCode.UNCONFIGURED,
                 message=(
-                    "Set KAGGLE_USERNAME and KAGGLE_API_KEY to activate. "
-                    "Get your key at https://www.kaggle.com/settings → API."
+                    "Set KAGGLE_API_TOKEN (new-style) or KAGGLE_USERNAME + KAGGLE_API_KEY to activate. "
+                    "Get yours at https://www.kaggle.com/settings → API."
                 ),
                 requires_credentials=True,
                 credentials_configured=False,

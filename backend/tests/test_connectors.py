@@ -50,7 +50,7 @@ class TestKaggleConnector:
         """Without credentials, status is UNCONFIGURED."""
         from connectors.base import SourceStatusCode
         connector = self._make_connector()
-        with patch("connectors.kaggle._get_credentials", return_value=None):
+        with patch("connectors.kaggle._get_auth", return_value=None):
             status = connector.get_source_status()
         assert status.status == SourceStatusCode.UNCONFIGURED
         assert status.credentials_configured is False
@@ -59,7 +59,7 @@ class TestKaggleConnector:
         """With credentials present, status is ACTIVE."""
         from connectors.base import SourceStatusCode
         connector = self._make_connector()
-        with patch("connectors.kaggle._get_credentials", return_value=("user", "key")):
+        with patch("connectors.kaggle._get_auth", return_value={"headers": {"Authorization": "Bearer KGAT_test"}}):
             status = connector.get_source_status()
         assert status.status == SourceStatusCode.ACTIVE
         assert status.credentials_configured is True
@@ -117,8 +117,8 @@ class TestKaggleConnector:
     async def test_fetch_events_raises_without_credentials(self):
         """fetch_events raises ValueError when no credentials are set."""
         connector = self._make_connector()
-        with patch("connectors.kaggle._get_credentials", return_value=None):
-            with pytest.raises(ValueError, match="KAGGLE_USERNAME"):
+        with patch("connectors.kaggle._get_auth", return_value=None):
+            with pytest.raises(ValueError, match="KAGGLE_API_TOKEN"):
                 await connector.fetch_events()
 
 
